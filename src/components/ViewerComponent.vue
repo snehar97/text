@@ -21,18 +21,25 @@
   -->
 
 <template>
-	<Editor :file-id="fileid"
+	<Editor v-if="false"
+		:file-id="fileid"
 		:relative-path="filename"
 		:active="active"
 		:autofocus="autofocus"
 		:share-token="shareToken"
 		:mime="mime" />
+	<Component :is="readerComponent" v-else :content="content" />
 </template>
 
 <script>
+import axios from '@nextcloud/axios'
+import PlainTextReader from './PlainTextReader.vue'
+import RichTextReader from './RichTextReader.vue'
 export default {
 	name: 'ViewerComponent',
 	components: {
+		RichTextReader,
+		PlainTextReader,
 		Editor: () => import(/* webpackChunkName: "editor" */'./Editor.vue'),
 	},
 	props: {
@@ -60,12 +67,32 @@ export default {
 			type: String,
 			default: null,
 		},
+		source: {
+			type: String,
+			default: undefined,
+		},
+	},
+	data() {
+		return {
+			content: '',
+		}
 	},
 	beforeMount() {
 		// FIXME Dirty fix to avoid recreating the component on stable16
 		if (typeof this.$parent.$parent !== 'undefined' && this.$parent.$parent.onResize) {
 			window.removeEventListener('resize', this.$parent.$parent.onResize)
 		}
+	},
+	mounted() {
+		axios.get(this.source).then(({ data }) => {
+			this.content = data
+			this.$emit('update:loaded', true)
+		})
+	},
+	computed: {
+		readerComponent() {
+			return this.mime === 'text/markdown' ? RichTextReader : PlainTextReader
+		},
 	},
 }
 </script>

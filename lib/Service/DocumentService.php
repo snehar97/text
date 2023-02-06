@@ -495,10 +495,6 @@ class DocumentService {
 		if (($share->getPermissions() & $permission) === 0) {
 			throw new NotFoundException();
 		}
-
-		if ($share->getHideDownload()) {
-			throw new NotPermittedException();
-		}
 	}
 
 	public function hasUnsavedChanges(Document $document) {
